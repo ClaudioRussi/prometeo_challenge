@@ -7,3 +7,15 @@ class ProviderSerializer(serializers.Serializer):
 
 class BankSerializer(serializers.Serializer):
     pass
+
+class SessionSerializer(serializers.Serializer):
+    key = serializers.CharField()
+    status = serializers.CharField()
+
+class AccountSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+    number = serializers.CharField()
+    branch = serializers.CharField()
+    currency = serializers.CharField()
+    balance = serializers.IntegerField()
