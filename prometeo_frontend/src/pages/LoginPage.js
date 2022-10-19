@@ -1,5 +1,7 @@
 import { Button, Form, Input, Select } from 'antd';
-import React from 'react';
+import axios from 'axios';
+import React, {useContext, useEffect, useState} from 'react';
+import SessionContext from '../contexts/SessionContext';
 const { Option } = Select;
 const layout = {
   labelCol: {
@@ -16,41 +18,30 @@ const tailLayout = {
   },
 };
 const LoginPage = () => {
+  const {saveSession} = useContext(SessionContext);
   const [form] = Form.useForm();
-  const onGenderChange = (value) => {
-    switch (value) {
-      case 'male':
-        form.setFieldsValue({
-          note: 'Hi, man!',
-        });
-        return;
-      case 'female':
-        form.setFieldsValue({
-          note: 'Hi, lady!',
-        });
-        return;
-      case 'other':
-      default:
-        form.setFieldsValue({
-          note: 'Hi there!',
-        });
-    }
-  };
+  const [banks, setBanks] = useState([]);
+  useEffect(() => {
+    axios.get("http://localhost:8000/api/providers/")
+    .then((response) => {
+      console.log(response.data);
+      setBanks(response.data);
+    }).catch((error) => {
+      console.log(error)
+    }, []);
+  })
   const onFinish = (values) => {
-    console.log(values);
-  };
-  const onReset = () => {
-    form.resetFields();
-  };
-  const onFill = () => {
-    form.setFieldsValue({
-      note: 'Hello world!',
-      gender: 'male',
+    axios.post("http://localhost:8000/api/login/", values)
+    .then((response) => {
+      saveSession(response.data.key);
+    }).catch((error) => {
+      console.log(error)
     });
   };
   return (
-    <Form {...layout} form={form} name="control-hooks" onFinish={onFinish}>
+    <Form style={{textAlign: "left"}} {...layout} form={form} name="control-hooks" onFinish={onFinish}>
       <Form.Item
+        style={{textAlign: "left"}}
         name="username"
         label="Username"
         rules={[
@@ -62,6 +53,7 @@ const LoginPage = () => {
         <Input />
       </Form.Item>
       <Form.Item
+        style={{textAlign: "left"}}
         label="Password"
         name="password"
         rules={[{ required: true, message: 'Please input your password!' }]}
@@ -69,6 +61,7 @@ const LoginPage = () => {
         <Input.Password />
       </Form.Item>
       <Form.Item
+        style={{textAlign: "left"}}
         name="bank"
         label="Bank"
         rules={[
@@ -79,43 +72,19 @@ const LoginPage = () => {
       >
         <Select
           placeholder="Select a option and change input text above"
-          onChange={onGenderChange}
           allowClear
         >
-          <Option value="male">male</Option>
-          <Option value="female">female</Option>
-          <Option value="other">other</Option>
+          {
+            banks.map(bank => (
+              <Option key={bank.code} value={bank.code}>{bank.name}</Option>
+            ))
+          }
+          
         </Select>
-      </Form.Item>
-      <Form.Item
-        noStyle
-        shouldUpdate={(prevValues, currentValues) => prevValues.gender !== currentValues.gender}
-      >
-        {({ getFieldValue }) =>
-          getFieldValue('gender') === 'other' ? (
-            <Form.Item
-              name="customizeGender"
-              label="Customize Gender"
-              rules={[
-                {
-                  required: true,
-                },
-              ]}
-            >
-              <Input />
-            </Form.Item>
-          ) : null
-        }
       </Form.Item>
       <Form.Item {...tailLayout}>
         <Button type="primary" htmlType="submit">
-          Submit
-        </Button>
-        <Button htmlType="button" onClick={onReset}>
-          Reset
-        </Button>
-        <Button type="link" htmlType="button" onClick={onFill}>
-          Fill form
+          Login
         </Button>
       </Form.Item>
     </Form>
