@@ -1,6 +1,6 @@
 from email import header
 from django.conf import settings
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .serializers import ProviderSerializer, AccountSerializer, SessionSerializer
 import requests
@@ -20,7 +20,8 @@ class SessionViewset(viewsets.ViewSet):
     serializer_class = SessionSerializer
 
     def create(self, request):
-        username, password, provider = request.data["username"], request.data["password"], request.data["provider"]
+        username, password = request.data["username"], request.data["password"]
+        provider = "test"
         url = settings.PROMETEO_URL+"/login/"
         payload = "provider="+provider+"&username="+username+"&password="+password
         headers = {
@@ -43,6 +44,10 @@ class AccountViewset(viewsets.ViewSet):
             "X-API-Key": settings.PROMETEO_API_KEY
         }
         response = requests.get(url, headers=headers)
-        print(response.json())
-        serializer = AccountSerializer(response.json()['accounts'], many=True)
-        return Response(serializer.data)
+        if response.status_code == 200:
+            print(response.json())
+            serializer = AccountSerializer(response.json()['accounts'], many=True)
+            return Response(serializer.data)
+        else:
+
+            return Response(content=response.json(), status=status.HTTP_401_UNAUTHORIZED)
